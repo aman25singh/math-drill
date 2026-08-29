@@ -216,8 +216,15 @@ pip install -e ".[dev]"
 pytest                # 85 tests
 ruff check .
 ruff format --check .
-pip-audit
+
+pip-audit -r requirements.txt        # runtime dependencies
+pip-audit -r requirements-dev.txt    # dev dependencies
 ```
+
+CI runs all of the above on every push, plus a clean-virtualenv install of
+`requirements.txt` — the step that would have caught the unusable `tkinter`
+line. Both requirements files are audited: checking only the runtime one is
+how a known CVE in the pinned `pytest` went unnoticed.
 
 `pytest` treats `FutureWarning` and `DeprecationWarning` as errors, so pandas
 and seaborn deprecations surface as test failures rather than console noise.
