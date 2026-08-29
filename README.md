@@ -8,23 +8,32 @@ can go back and answer questions a score never can:
 
 > Operands containing a **9** cost you **4.98s** on average.
 > Operands containing a **1** cost you **3.44s**.
-> Additions that carry cost **1.4s more** than additions that don't.
 
 That is the point of the project. The drill exists to generate the data; the
-feature extraction is what makes the data worth having.
+feature extraction is what makes the data worth having. Both numbers above are
+read straight off the first chart — it is the evidence for the claim, not an
+illustration of it.
 
-![Session analysis charts](Data/Demo_1.png)
-![Digit difficulty and feature comparison](Data/Demo_2.png)
+**Average time and error rate for every operand digit, 1–9:**
 
-> **About those screenshots:** they were generated from a much larger practice
-> log that no longer exists in this repo. The committed sample data is a single
-> session of 9 questions — enough to prove the pipeline runs, nowhere near
-> enough for the comparisons to mean anything. See
-> [How much data you need](#how-much-data-you-need).
+![Heatmap of average answer time and error rate per operand digit](Data/Demo_1.png)
+
+**Answer time against the size of the larger operand, coloured by correctness:**
+
+![Scatter plot of answer time versus larger operand](Data/Demo_2.png)
+
+> **About those screenshots:** they are real measurements, but they are dated.
+> Both were produced by an earlier version of the charting code against a much
+> larger practice log that is no longer in this repo, so they do not match
+> today's output: the tool now draws all eight panels as a single 2×4 figure,
+> and the heatmap's second column is called `error_rate` rather than
+> `incorrect_rate`. The committed sample data is one session of 9 questions —
+> enough to prove the pipeline runs, nowhere near enough for the comparisons to
+> mean anything. See [How much data you need](#how-much-data-you-need).
 
 ---
 
-# Why I Built this
+## Why I Built This
 As someone preparing for quantitative finance and data-intensive roles, I wanted a tool that not only drills arithmetic speed but also tracks and analyzes improvement over time.
 
 This project combines my interests in Python development, data visualization, and performance optimization into a practical, interactive tool.
@@ -54,6 +63,24 @@ insight, not the absolute time.
 
 Boolean features compare their true set against their false set. Numeric
 features are **binned**, and each bin is compared against the overall mean.
+
+### What the charts show
+
+`math-drill-insights` renders one 2×4 figure with these eight panels:
+
+| Panel | |
+|---|---|
+| Avg Time by Operation | mean seconds per `add` / `sub` / `mul` / `div`, annotated with `n` |
+| Digits That Trip You Up | the digit heatmap — avg time and error rate for `has_1`…`has_9` |
+| Time vs Operand Size | answer time against `max_operand`, with a fitted line |
+| Response Time (with Rolling Avg) | every answer in order, plus a 5-question rolling mean |
+| Accuracy by Time Bucket | accuracy split into `<2s`, `2–4s`, `4–6s`, `6s+` |
+| Slowest Patterns (vs baseline) | the top 8 features by how many seconds they cost **over baseline** |
+| Session Summary | totals, accuracy, average time, questions per minute |
+| Error Distribution by Operation | which operation your wrong answers came from |
+
+Panels that do not have enough data yet say so in place rather than rendering an
+empty or misleading chart.
 
 ## Install
 
@@ -170,8 +197,10 @@ true:
   noise. The tool prints a warning at this point.
 - **A few hundred answers across several sessions** — digit and carry
   comparisons start to separate from noise.
-- Any feature group with fewer than 5 questions on **either** side of the
-  comparison is skipped rather than shown with a misleading average.
+- A boolean feature is skipped unless it has at least 5 questions on **both**
+  sides of its comparison, and a numeric bin is skipped unless it holds at
+  least 5. Skipping beats showing a confident-looking average built on two
+  data points.
 
 The sample log committed here holds **one session of 9 questions**. It is there
 so the pipeline has something to chew on, not because it demonstrates anything.
@@ -195,14 +224,20 @@ rather than a decision. It is now a checkbox on the setup screen
 
 ```
 mathdrill/
+  __init__.py    package docstring and __version__
   core.py        drill logic: config, question generation, scoring, records
   features.py    feature extraction and metrics (pandas; no plotting)
   storage.py     session JSON load/save and validation
   app.py         Tkinter setup screen
   game_frame.py  Tkinter drill screen
   insights.py    matplotlib/seaborn charts
-tests/           pytest suite; no GUI, no real data file
+tests/
+  test_core.py       question generation, scoring, config validation
+  test_features.py   feature extraction, metrics, the session-filter regression
+  test_storage.py    load/save, malformed input, legacy records
 ```
+
+The tests open no GUI and never touch your real session file.
 
 `core.py`, `features.py` and `storage.py` import **neither tkinter nor
 matplotlib**. The drill logic and the analysis are usable from a CLI, a test,
