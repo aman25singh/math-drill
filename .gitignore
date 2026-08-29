@@ -1,23 +1,46 @@
-# Default ignored files
-/shelf/
-/workspace.xml
-
-# Python cache and compiled files
+# Byte-compiled / cached Python
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
 
-# Jupyter Notebook checkpoints
+# Virtual environments
+Drill/
+.venv
+.venv/
+venv/
+env/
+ENV/
+
+# Environment / secrets
+.env
+.env.*
+*.env
+
+# Packaging / build artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# Jupyter
 .ipynb_checkpoints
 
-# VSCode settings
+# Editors / IDEs
+.idea/
 .vscode/
 
-# Environment folders
-Drill/
-
-# Data and session files
-Data/session_insights.json
-
 # OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Session data (local, per-user; not meaningful to share)
+Data/session_insights.json
