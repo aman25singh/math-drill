@@ -9,7 +9,7 @@ description = "Timed mental-arithmetic drills with per-question timing analysis.
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
-authors = [{ name = "aman25singh", email = "dispatch2aman@gmail.com" }]
+authors = [{ name = "aman25singh", email = "183156116+aman25singh@users.noreply.github.com" }]
 keywords = ["arithmetic", "drill", "mental-math", "analytics", "tkinter"]
 classifiers = [
     "Development Status :: 4 - Beta",
