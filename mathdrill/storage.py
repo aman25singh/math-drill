@@ -123,8 +123,7 @@ def _validate(payload: object, path: Path) -> list[dict]:
             absent = [f for f in REQUIRED_RECORD_FIELDS if f not in record]
             if absent:
                 raise SessionDataError(
-                    f"{label}, answer {j + 1} is missing required field(s): "
-                    f"{', '.join(absent)}."
+                    f"{label}, answer {j + 1} is missing required field(s): {', '.join(absent)}."
                 )
             cleaned.append(record)
 
@@ -154,9 +153,7 @@ def load_sessions(path: Path | str | None = None) -> list[dict]:
     except OSError as exc:
         raise SessionDataError(f"Could not read {target}: {exc}") from exc
     except UnicodeDecodeError as exc:
-        raise SessionDataError(
-            f"Session file {target} is not valid UTF-8 text: {exc}"
-        ) from exc
+        raise SessionDataError(f"Session file {target} is not valid UTF-8 text: {exc}") from exc
 
     if not text:
         return []

@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import random
 import time
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field
-from typing import Callable, Sequence
 
 OPERATIONS: tuple[str, ...] = ("add", "sub", "mul", "div")
 
@@ -54,9 +54,7 @@ def _validate_range(name: str, value: Sequence[int]) -> tuple[int, int]:
     except (TypeError, ValueError):
         raise ConfigError(f"{name} bounds must be whole numbers.") from None
     if low > high:
-        raise ConfigError(
-            f"{name} minimum ({low}) is greater than its maximum ({high})."
-        )
+        raise ConfigError(f"{name} minimum ({low}) is greater than its maximum ({high}).")
     if low < 0:
         raise ConfigError(f"{name} cannot be negative (got {low}).")
     return low, high
@@ -120,13 +118,11 @@ class DrillConfig:
         if "div" in ops:
             if self.mul_range2[1] < 1:
                 raise ConfigError(
-                    "Division needs a divisor of at least 1; widen the "
-                    "multiplication range."
+                    "Division needs a divisor of at least 1; widen the multiplication range."
                 )
             if self.mul_range1[1] < 1:
                 raise ConfigError(
-                    "Division needs a quotient of at least 1; widen the "
-                    "multiplication range."
+                    "Division needs a quotient of at least 1; widen the multiplication range."
                 )
 
     @classmethod
@@ -232,9 +228,7 @@ def build_answer_record(
     }
 
 
-def build_session_record(
-    session_name: str, duration: int, records: Sequence[dict]
-) -> dict:
+def build_session_record(session_name: str, duration: int, records: Sequence[dict]) -> dict:
     """Wrap answer records as one stored session."""
     return {
         "session_name": session_name,
@@ -327,9 +321,7 @@ class DrillSession:
         if record["correctness"]:
             self.score += 1
 
-        return SubmitResult(
-            accepted=True, correct=record["correctness"], record=record
-        )
+        return SubmitResult(accepted=True, correct=record["correctness"], record=record)
 
     def finish(self) -> None:
         """Close the session. Later submissions are ignored."""
@@ -340,9 +332,7 @@ class DrillSession:
         """End-of-session statistics."""
         total = len(self.records)
         correct = sum(1 for r in self.records if r["correctness"])
-        avg_time = (
-            sum(r["time_taken_sec"] for r in self.records) / total if total else 0.0
-        )
+        avg_time = sum(r["time_taken_sec"] for r in self.records) / total if total else 0.0
         minutes = self.config.duration / 60
         return {
             "session_name": self.config.session_name,
@@ -358,12 +348,8 @@ class DrillSession:
 
     def slowest(self, limit: int = 5) -> list[dict]:
         """The slowest answers of the session, slowest first."""
-        return sorted(
-            self.records, key=lambda r: r["time_taken_sec"], reverse=True
-        )[:limit]
+        return sorted(self.records, key=lambda r: r["time_taken_sec"], reverse=True)[:limit]
 
     def to_record(self) -> dict:
         """This session in the stored JSON shape."""
-        return build_session_record(
-            self.config.session_name, self.config.duration, self.records
-        )
+        return build_session_record(self.config.session_name, self.config.duration, self.records)

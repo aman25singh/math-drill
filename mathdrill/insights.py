@@ -38,7 +38,11 @@ def build_figure(df: pd.DataFrame):
     axes[0].set_ylabel("Seconds")
     for i, (_, row) in enumerate(avg_op.iterrows()):
         axes[0].text(
-            i, row["avg_time"], f"n={int(row['count'])}", ha="center", va="bottom",
+            i,
+            row["avg_time"],
+            f"n={int(row['count'])}",
+            ha="center",
+            va="bottom",
             fontsize=8,
         )
 
@@ -70,12 +74,20 @@ def build_figure(df: pd.DataFrame):
     # 4. Response time over the session.
     ordered = features.response_time_series(df)
     sns.lineplot(
-        data=ordered, x="question_number", y="time_taken_sec",
-        ax=axes[3], label="Time", color="gray",
+        data=ordered,
+        x="question_number",
+        y="time_taken_sec",
+        ax=axes[3],
+        label="Time",
+        color="gray",
     )
     sns.lineplot(
-        data=ordered, x="question_number", y="rolling",
-        ax=axes[3], label="Rolling Avg", color="purple",
+        data=ordered,
+        x="question_number",
+        y="rolling",
+        ax=axes[3],
+        label="Rolling Avg",
+        color="purple",
     )
     axes[3].set_title("Response Time (with Rolling Avg)")
 
@@ -164,11 +176,11 @@ def main(argv: list[str] | None = None) -> int:
         nargs="?",
         help="Only analyse this session. Omit to analyse every session.",
     )
+    parser.add_argument("--file", dest="path", default=None, help="Path to a session JSON file.")
     parser.add_argument(
-        "--file", dest="path", default=None, help="Path to a session JSON file."
-    )
-    parser.add_argument(
-        "--save", metavar="PNG", default=None,
+        "--save",
+        metavar="PNG",
+        default=None,
         help="Write the figure to a PNG instead of opening a window.",
     )
     args = parser.parse_args(argv)
@@ -180,10 +192,7 @@ def main(argv: list[str] | None = None) -> int:
         return 2
 
     if not sessions:
-        print(
-            f"No session data found in {args.path or data_file()}. "
-            "Play a session first."
-        )
+        print(f"No session data found in {args.path or data_file()}. Play a session first.")
         return 0
 
     df = features.to_dataframe(sessions)

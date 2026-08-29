@@ -72,9 +72,7 @@ class GameFrame(tk.Frame):
         )
         self.score_label.grid(row=1, column=1, sticky="e", padx=10)
 
-        self.question_label = tk.Label(
-            self, text="", font=("Helvetica", 16), bg=BG, fg="#111"
-        )
+        self.question_label = tk.Label(self, text="", font=("Helvetica", 16), bg=BG, fg="#111")
         self.question_label.grid(row=2, column=0, columnspan=2, pady=10)
 
         self.answer_var = tk.StringVar()

@@ -58,19 +58,17 @@ class ConfigFrame(tk.Frame):
         tk.Checkbutton(self, text="Addition", variable=self.var_add, bg="white").grid(
             row=2, column=0, sticky="w"
         )
-        tk.Checkbutton(
-            self, text="Subtraction", variable=self.var_sub, bg="white"
-        ).grid(row=3, column=0, sticky="w")
-        tk.Checkbutton(
-            self, text="Multiplication", variable=self.var_mul, bg="white"
-        ).grid(row=4, column=0, sticky="w")
+        tk.Checkbutton(self, text="Subtraction", variable=self.var_sub, bg="white").grid(
+            row=3, column=0, sticky="w"
+        )
+        tk.Checkbutton(self, text="Multiplication", variable=self.var_mul, bg="white").grid(
+            row=4, column=0, sticky="w"
+        )
         tk.Checkbutton(self, text="Division", variable=self.var_div, bg="white").grid(
             row=5, column=0, sticky="w"
         )
 
-        tk.Label(self, text="Addition range:", bg="white").grid(
-            row=2, column=1, sticky="e", padx=5
-        )
+        tk.Label(self, text="Addition range:", bg="white").grid(row=2, column=1, sticky="e", padx=5)
         self.add_min1 = self._make_entry("2", 2, 2)
         self._make_label("to", 2, 3)
         self.add_max1 = self._make_entry("100", 2, 4)
@@ -94,9 +92,9 @@ class ConfigFrame(tk.Frame):
             row=6, column=0, sticky="w", padx=5, pady=5
         )
         self.duration_var = tk.StringVar(value="120")
-        tk.OptionMenu(
-            self, self.duration_var, *[str(d) for d in DURATION_CHOICES]
-        ).grid(row=6, column=1, sticky="w")
+        tk.OptionMenu(self, self.duration_var, *[str(d) for d in DURATION_CHOICES]).grid(
+            row=6, column=1, sticky="w"
+        )
 
         self.negatives_var = tk.BooleanVar(value=True)
         tk.Checkbutton(
@@ -172,12 +170,8 @@ class ConfigFrame(tk.Frame):
         """Read the form into a validated config, or raise ConfigError."""
         add_rng1 = self._read_range("Addition range 1", self.add_min1, self.add_max1)
         add_rng2 = self._read_range("Addition range 2", self.add_min2, self.add_max2)
-        mul_rng1 = self._read_range(
-            "Multiplication range 1", self.mul_min1, self.mul_max1
-        )
-        mul_rng2 = self._read_range(
-            "Multiplication range 2", self.mul_min2, self.mul_max2
-        )
+        mul_rng1 = self._read_range("Multiplication range 1", self.mul_min1, self.mul_max1)
+        mul_rng2 = self._read_range("Multiplication range 2", self.mul_min2, self.mul_max2)
 
         raw_duration = self.duration_var.get().strip()
         try:
@@ -225,9 +219,7 @@ class SpeedDrillApp(tk.Tk):
         super().__init__()
         self.title("Arithmetic Speed Drill")
         self.configure(bg="white")
-        self.config_frame = ConfigFrame(
-            self, self.start_game, self.view_overall_analysis
-        )
+        self.config_frame = ConfigFrame(self, self.start_game, self.view_overall_analysis)
         self.config_frame.pack()
         self.game_frame = None
 
@@ -271,9 +263,7 @@ class SpeedDrillApp(tk.Tk):
         if self.game_frame:
             self.game_frame.destroy()
             self.game_frame = None
-        self.config_frame = ConfigFrame(
-            self, self.start_game, self.view_overall_analysis
-        )
+        self.config_frame = ConfigFrame(self, self.start_game, self.view_overall_analysis)
         self.config_frame.pack()
 
 

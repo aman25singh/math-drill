@@ -1,0 +1,78 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "math-drill"
+version = "0.2.0"
+description = "Timed mental-arithmetic drills with per-question timing analysis."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+authors = [{ name = "aman25singh", email = "dispatch2aman@gmail.com" }]
+keywords = ["arithmetic", "drill", "mental-math", "analytics", "tkinter"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: X11 Applications",
+    "Environment :: Win32 (MS Windows)",
+    "Intended Audience :: Education",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Education",
+]
+
+# Tkinter is deliberately absent: it ships with CPython and is not
+# pip-installable. Listing it here (or in requirements.txt, where it used to
+# be) makes `pip install` fail outright. On Debian/Ubuntu it is a separate
+# system package, python3-tk.
+#
+# pandas is capped below 3.0: seaborn 0.13.2 is the newest seaborn release and
+# predates pandas 3.0, so that pairing is untested upstream.
+dependencies = [
+    "pandas>=2.2,<3.0",
+    "matplotlib>=3.8,<4.0",
+    "seaborn>=0.13.2,<0.14",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "pip-audit>=2.7",
+]
+
+[project.urls]
+Homepage = "https://github.com/aman25singh/math-drill"
+Repository = "https://github.com/aman25singh/math-drill"
+Issues = "https://github.com/aman25singh/math-drill/issues"
+
+[project.scripts]
+math-drill = "mathdrill.app:main"
+math-drill-insights = "mathdrill.insights:main"
+
+[tool.setuptools]
+packages = ["mathdrill"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
+filterwarnings = [
+    "error::FutureWarning",
+    "error::DeprecationWarning",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B", "C4"]
+ignore = [
+    "E501",  # line length is handled by the formatter
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]

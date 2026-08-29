@@ -117,12 +117,8 @@ def compute_insight_flags(df: pd.DataFrame) -> pd.DataFrame:
     op1 = df["operand_1"].astype(int)
     op2 = df["operand_2"].astype(int)
 
-    df["is_carry_addition"] = (df["operation"] == "add") & (
-        (op1 % 10 + op2 % 10) >= 10
-    )
-    df["is_borrow_subtraction"] = (df["operation"] == "sub") & (
-        (op1 % 10) < (op2 % 10)
-    )
+    df["is_carry_addition"] = (df["operation"] == "add") & ((op1 % 10 + op2 % 10) >= 10)
+    df["is_borrow_subtraction"] = (df["operation"] == "sub") & ((op1 % 10) < (op2 % 10))
 
     op1_str = op1.abs().astype(str)
     op2_str = op2.abs().astype(str)
@@ -172,9 +168,7 @@ def digit_difficulty(df: pd.DataFrame, min_samples: int = 1) -> pd.DataFrame:
         )
     if not rows:
         raise NoDataError("Not enough data to compare digits yet.")
-    return pd.DataFrame(rows).set_index("digit").sort_values(
-        "avg_time", ascending=False
-    )
+    return pd.DataFrame(rows).set_index("digit").sort_values("avg_time", ascending=False)
 
 
 def _numeric_bins(series: pd.Series, max_bins: int = 4) -> pd.Series | None:
@@ -286,9 +280,7 @@ def accuracy_by_time_bucket(df: pd.DataFrame) -> pd.Series:
         raise NoDataError("No session data found. Play a session first.")
     bins = [0, 2, 4, 6, float("inf")]
     labels = ["<2s", "2-4s", "4-6s", "6s+"]
-    bucket = pd.cut(
-        df["time_taken_sec"], bins=bins, labels=labels, include_lowest=True
-    )
+    bucket = pd.cut(df["time_taken_sec"], bins=bins, labels=labels, include_lowest=True)
     # observed=True is explicit: the default flipped in pandas 2.x and emits a
     # FutureWarning when grouping on a categorical.
     return df.groupby(bucket, observed=True)["correctness"].mean().reindex(labels)
@@ -342,7 +334,5 @@ def response_time_series(df: pd.DataFrame, window: int = 5) -> pd.DataFrame:
         raise NoDataError("No session data found. Play a session first.")
     ordered = df.sort_values("timestamp").reset_index(drop=True)
     ordered["question_number"] = ordered.index + 1
-    ordered["rolling"] = (
-        ordered["time_taken_sec"].rolling(window, min_periods=1).mean()
-    )
+    ordered["rolling"] = ordered["time_taken_sec"].rolling(window, min_periods=1).mean()
     return ordered
