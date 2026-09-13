@@ -292,6 +292,24 @@ def test_summary_handles_a_zero_duration_session_without_crashing():
     assert math.isnan(summary["questions_per_min"])
 
 
+def test_repeated_names_keep_separate_durations_and_average_session_rates():
+    df = features.to_dataframe(
+        [
+            session("practice", duration=30, answers=[answer()] * 10),
+            session("practice", duration=120, answers=[answer()] * 10),
+        ]
+    )
+    summary = features.session_summary(df)
+    assert summary["sessions"] == 2
+    assert summary["total_duration_sec"] == 150
+    assert summary["questions_per_min"] == pytest.approx(12.5)
+
+
+def test_named_filter_on_empty_sessions_reports_no_data():
+    with pytest.raises(NoDataError, match="No session data"):
+        features.filter_session(features.to_dataframe([session()]), "s1")
+
+
 def test_digit_difficulty_ranks_slow_digits_first():
     rows = [answer("add", 9, 9, correct_answer=18, time_taken_sec=8.0)] * 3 + [
         answer("add", 1, 1, correct_answer=2, time_taken_sec=1.0)

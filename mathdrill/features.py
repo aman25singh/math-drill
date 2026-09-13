@@ -62,7 +62,7 @@ def flatten_sessions(sessions: list[dict]) -> list[dict]:
     after flattening.
     """
     rows: list[dict] = []
-    for session in sessions:
+    for session_index, session in enumerate(sessions):
         insights = session.get("insights") or []
         for i, insight in enumerate(insights):
             rows.append(
@@ -71,6 +71,7 @@ def flatten_sessions(sessions: list[dict]) -> list[dict]:
                     "duration": session.get("duration", 0),
                     "index": i + 1,
                     **insight,
+                    "_session_index": session_index,
                 }
             )
     return rows
@@ -90,6 +91,8 @@ def filter_session(df: pd.DataFrame, session_name: str | None) -> pd.DataFrame:
     the feature computation as separate pure functions on an explicit
     DataFrame is what stops that from recurring.
     """
+    if df is None or df.empty:
+        raise NoDataError("No session data found. Play a session first.")
     if not session_name:
         return df
     filtered = df[df["session_name"] == session_name].copy()
@@ -310,21 +313,24 @@ def session_summary(df: pd.DataFrame) -> dict:
     correct = int(df["correctness"].astype(bool).sum())
     names = df["session_name"].unique()
 
-    # One duration per session, not per row.
-    durations = df.groupby("session_name", observed=True)["duration"].first()
+    # Names are labels, not identities: two drills may share a name.
+    key = "_session_index" if "_session_index" in df.columns else "session_name"
+    groups = df.groupby(key, observed=True)
+    durations = groups["duration"].first()
     total_seconds = float(durations.sum())
-    minutes = total_seconds / 60
+    rates = groups.size() * 60 / durations.where(durations > 0)
+    session_count = len(durations)
 
     return {
-        "session_name": names[0] if len(names) == 1 else f"{len(names)} sessions",
-        "sessions": int(len(names)),
+        "session_name": names[0] if session_count == 1 else f"{session_count} sessions",
+        "sessions": int(session_count),
         "total": total,
         "correct": correct,
         "incorrect": total - correct,
         "accuracy": correct / total,
         "avg_time_sec": float(df["time_taken_sec"].mean()),
         "total_duration_sec": total_seconds,
-        "questions_per_min": (total / minutes) if minutes > 0 else float("nan"),
+        "questions_per_min": float(rates.mean()),
     }
 
 

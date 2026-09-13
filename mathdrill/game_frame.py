@@ -7,6 +7,8 @@ file owns widgets, the countdown, and nothing else.
 
 from __future__ import annotations
 
+import math
+import time
 import tkinter as tk
 
 from .core import DrillConfig, DrillSession
@@ -104,6 +106,7 @@ class GameFrame(tk.Frame):
         self.close_btn.grid(row=5, column=0, columnspan=2, pady=10)
         self.close_btn.grid_remove()
 
+        self._deadline = time.monotonic() + self.drill_config.duration
         self.next_question()
         self.update_timer()
         self._end_job = self.after(self.drill_config.duration * 1000, self.end_game)
@@ -111,20 +114,25 @@ class GameFrame(tk.Frame):
     # ------------------------------------------------------------------ timer
 
     def update_timer(self):
-        """Tick the countdown once per second."""
+        """Display the time left against the same deadline used for submissions."""
+        self._timer_job = None
+        if self.session.finished:
+            return
+        self.remaining_time = max(0, math.ceil(self._deadline - time.monotonic()))
         if self.remaining_time > 0:
-            self.remaining_time -= 1
             self.timer_label.config(text=f"Time Remaining: {self.remaining_time}s")
             self._timer_job = self.after(1000, self.update_timer)
         else:
-            self._timer_job = None
-            self.timer_label.config(text="Time's up!")
+            self.end_game()
 
     # ----------------------------------------------------------------- drill
 
     def next_question(self):
         """Show the next question."""
         self._next_question_job = None
+        if time.monotonic() >= self._deadline:
+            self.end_game()
+            return
         question = self.session.next_question()
         if question is None:
             return
@@ -135,6 +143,9 @@ class GameFrame(tk.Frame):
 
     def check_answer(self, event=None):
         """Handle Return in the answer box."""
+        if time.monotonic() >= self._deadline:
+            self.end_game()
+            return
         result = self.session.submit(self.answer_var.get())
         if not result.accepted:
             # Blank entry, or the session already ended. Do nothing at all --
@@ -149,6 +160,7 @@ class GameFrame(tk.Frame):
             )
 
         self.score_label.config(text=f"Score: {self.session.score}")
+        self.answer_entry.config(state="disabled")
         self._next_question_job = self.after(10, self.next_question)
 
     # ------------------------------------------------------------------- end
@@ -166,7 +178,8 @@ class GameFrame(tk.Frame):
 
     def end_game(self):
         """Stop the drill, show the summary, and save the session."""
-        self._end_job = None
+        if self.session.finished:
+            return
         self._cancel_pending()
         self.session.finish()
 

@@ -233,6 +233,29 @@ def test_blank_submissions_are_ignored_entirely():
     assert session.score == 0
 
 
+def test_question_can_only_be_submitted_once():
+    session = DrillSession(make_config(), clock=FakeClock())
+    question = session.next_question()
+    assert session.submit(str(question.answer)).accepted
+    assert not session.submit(str(question.answer)).accepted
+    assert len(session.records) == 1
+    assert session.score == 1
+    next_question = session.next_question()
+    assert session.submit(str(next_question.answer)).accepted
+
+
+def test_elapsed_time_is_independent_of_wall_clock_changes():
+    elapsed = FakeClock()
+    wall = FakeClock(start=1_700_000_000)
+    session = DrillSession(make_config(), clock=elapsed, timestamp_clock=wall)
+    question = session.next_question()
+    elapsed.advance(2.5)
+    wall.advance(-3600)
+    record = session.submit(str(question.answer)).record
+    assert record["time_taken_sec"] == 2.5
+    assert record["timestamp"] == wall.now
+
+
 def test_wrong_answer_never_drives_the_score_below_zero():
     clock = FakeClock()
     session = DrillSession(make_config(), rng=random.Random(2), clock=clock)

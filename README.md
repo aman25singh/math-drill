@@ -27,9 +27,8 @@ illustration of it.
 > larger practice log that is no longer in this repo, so they do not match
 > today's output: the tool now draws all eight panels as a single 2×4 figure,
 > and the heatmap's second column is called `error_rate` rather than
-> `incorrect_rate`. The committed sample data is one session of 9 questions —
-> enough to prove the pipeline runs, nowhere near enough for the comparisons to
-> mean anything. See [How much data you need](#how-much-data-you-need).
+> `incorrect_rate`. Session logs are local and gitignored; a fresh checkout has
+> no practice data. See [How much data you need](#how-much-data-you-need).
 
 ---
 
@@ -46,6 +45,13 @@ It’s designed to:
 ---
 
 ## What it measures
+
+**Current eight-panel layout, using clearly labelled synthetic data:**
+
+![Current analytics overview with eight panels, generated from synthetic demo sessions](Data/Demo_current.png)
+
+Regenerate this illustration with `python -m scripts.render_demo` from the
+project root. It does not read or modify your practice log.
 
 Every answered question is scored against a set of derived features, and each
 feature is compared **against its own opposite** — the difference is the
@@ -202,8 +208,11 @@ true:
   least 5. Skipping beats showing a confident-looking average built on two
   data points.
 
-The sample log committed here holds **one session of 9 questions**. It is there
-so the pipeline has something to chew on, not because it demonstrates anything.
+Session logs are not committed. Play several sessions to build your own dataset.
+Overall questions per minute is the arithmetic mean of the individual session
+rates, each calculated from its configured duration. Reusing a session name
+keeps those sessions separate in the summary; filtering by name selects all
+sessions with that name. Sessions with no answers do not enter these comparisons.
 
 ## Two deliberate design choices
 
@@ -248,7 +257,7 @@ or a future web port without dragging a GUI along.
 ```sh
 pip install -e ".[dev]"
 
-pytest                # 85 tests
+pytest
 ruff check .
 ruff format --check .
 

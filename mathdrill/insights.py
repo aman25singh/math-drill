@@ -100,13 +100,18 @@ def build_figure(df: pd.DataFrame):
     # 6. What actually slows you down, as a difference from baseline.
     try:
         comparison = features.feature_comparison(df).head(8)
+        comparison = comparison.copy()
+        comparison["chart_label"] = comparison.apply(
+            lambda row: f"{row['description']} (n={row['n']}, baseline n={row['baseline_n']})",
+            axis=1,
+        )
         # hue= is set explicitly; passing palette= without it is deprecated in
         # seaborn 0.14 and warns on current versions.
         sns.barplot(
             data=comparison,
             x="delta",
-            y="description",
-            hue="description",
+            y="chart_label",
+            hue="chart_label",
             palette="coolwarm",
             legend=False,
             ax=axes[5],

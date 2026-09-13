@@ -279,7 +279,8 @@ class DrillSession:
 
     config: DrillConfig
     rng: random.Random = field(default_factory=random.Random)
-    clock: Callable[[], float] = time.time
+    clock: Callable[[], float] = time.monotonic
+    timestamp_clock: Callable[[], float] = time.time
 
     records: list[dict] = field(default_factory=list, init=False)
     score: int = field(default=0, init=False)
@@ -312,8 +313,11 @@ class DrillSession:
         started = self._question_started_at
         if started is None:
             started = now
-        record = build_answer_record(self.current, value, now - started, now)
+        record = build_answer_record(self.current, value, now - started, self.timestamp_clock())
         self.records.append(record)
+        # Consume the question before the GUI schedules its replacement.
+        self.current = None
+        self._question_started_at = None
 
         # Score counts correct answers only. It used to subtract a point for a
         # wrong answer, which -- combined with blank submissions counting as
