@@ -26,6 +26,9 @@ npm run preview   # preview the production build
 - The first milestone uses browser `localStorage`, with JSON import/export for
   the Python desktop session contract. No backend, account system, or database
   is required.
+- W03 persistence lives in `src/lib/storage.ts`. It validates the full session
+  array before use, preserves equal-name sessions as separate entries, accepts
+  legacy `question_type`, and keeps browser-only IDs out of exported JSON.
 - The first interactive implementation will use Astro components and standard
   TypeScript. A small framework integration may be added later only if the
   drill's stateful UI warrants it.
