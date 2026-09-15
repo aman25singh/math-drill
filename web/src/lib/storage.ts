@@ -55,7 +55,11 @@ function requireSafeInteger(value: unknown, label: string): number {
   return number;
 }
 
-function normalizeAnswer(raw: unknown, sessionIndex: number, answerIndex: number): AnswerRecord {
+function normalizeAnswer(
+  raw: unknown,
+  sessionIndex: number,
+  answerIndex: number,
+): AnswerRecord {
   const label = `Session ${sessionIndex + 1}, answer ${answerIndex + 1}`;
   if (!isRecord(raw)) throw new SessionDataError(`${label} must be an object.`);
 
@@ -93,15 +97,29 @@ function normalizeAnswer(raw: unknown, sessionIndex: number, answerIndex: number
     operation: operationValue as Operation,
     operand1: requireSafeInteger(raw.operand_1, `${label}.operand_1`),
     operand2: requireSafeInteger(raw.operand_2, `${label}.operand_2`),
-    correctAnswer: requireSafeInteger(raw.correct_answer, `${label}.correct_answer`),
+    correctAnswer: requireSafeInteger(
+      raw.correct_answer,
+      `${label}.correct_answer`,
+    ),
     userAnswer: userAnswer === undefined ? null : (userAnswer as number | null),
-    timeTakenSec: requireFiniteNumber(raw.time_taken_sec, `${label}.time_taken_sec`),
+    timeTakenSec: requireFiniteNumber(
+      raw.time_taken_sec,
+      `${label}.time_taken_sec`,
+    ),
     correctness: raw.correctness,
   };
 }
 
 function toStoredAnswer(record: AnswerRecord): Record<string, unknown> {
-  const { id: _id, operand1, operand2, correctAnswer, userAnswer, timeTakenSec, ...rest } = record;
+  const {
+    id: _id,
+    operand1,
+    operand2,
+    correctAnswer,
+    userAnswer,
+    timeTakenSec,
+    ...rest
+  } = record;
   return {
     ...rest,
     operand_1: operand1,
@@ -114,17 +132,24 @@ function toStoredAnswer(record: AnswerRecord): Record<string, unknown> {
 
 export function normalizeSessions(payload: unknown): SessionRecord[] {
   if (!Array.isArray(payload)) {
-    throw new SessionDataError("Session storage must contain an array of sessions.");
+    throw new SessionDataError(
+      "Session storage must contain an array of sessions.",
+    );
   }
 
   return payload.map((rawSession, sessionIndex) => {
     const label = `Session ${sessionIndex + 1}`;
-    if (!isRecord(rawSession)) throw new SessionDataError(`${label} must be an object.`);
+    if (!isRecord(rawSession))
+      throw new SessionDataError(`${label} must be an object.`);
     if (typeof rawSession.session_name !== "string") {
       throw new SessionDataError(`${label}.session_name must be a string.`);
     }
-    const duration = requireSafeInteger(rawSession.duration, `${label}.duration`);
-    if (duration < 0) throw new SessionDataError(`${label}.duration cannot be negative.`);
+    const duration = requireSafeInteger(
+      rawSession.duration,
+      `${label}.duration`,
+    );
+    if (duration < 0)
+      throw new SessionDataError(`${label}.duration cannot be negative.`);
     if (!Array.isArray(rawSession.insights)) {
       throw new SessionDataError(`${label}.insights must be an array.`);
     }
@@ -170,7 +195,10 @@ export function serializeSessions(sessions: readonly SessionRecord[]): string {
   );
 }
 
-export function saveSessions(storage: StorageLike, sessions: readonly SessionRecord[]): void {
+export function saveSessions(
+  storage: StorageLike,
+  sessions: readonly SessionRecord[],
+): void {
   const serialized = serializeSessions(sessions);
   try {
     storage.setItem(STORAGE_KEY, serialized);
@@ -181,19 +209,28 @@ export function saveSessions(storage: StorageLike, sessions: readonly SessionRec
   }
 }
 
-export function appendSession(storage: StorageLike, session: SessionRecord): SessionRecord[] {
+export function appendSession(
+  storage: StorageLike,
+  session: SessionRecord,
+): SessionRecord[] {
   const sessions = loadSessions(storage);
-  const next = [...sessions, { ...session, id: `${sessions.length}:${session.sessionName}` }];
+  const next = [
+    ...sessions,
+    { ...session, id: `${sessions.length}:${session.sessionName}` },
+  ];
   saveSessions(storage, next);
   return next;
 }
 
 export function browserStorage(): StorageLike {
   try {
-    if (typeof globalThis.localStorage === "undefined") throw new Error("localStorage unavailable");
+    if (typeof globalThis.localStorage === "undefined")
+      throw new Error("localStorage unavailable");
     return globalThis.localStorage;
   } catch {
-    throw new SessionDataError("Browser storage is unavailable in this context.");
+    throw new SessionDataError(
+      "Browser storage is unavailable in this context.",
+    );
   }
 }
 
@@ -206,8 +243,14 @@ export function appendBrowserSession(session: SessionRecord): SessionRecord[] {
 }
 
 /** Validate an exported desktop session file completely before changing history. */
-export function importSessions(storage: StorageLike, text: string): SessionRecord[] {
-  if (!text.trim()) throw new SessionDataError("Choose a JSON file containing a session array; the file is blank.");
+export function importSessions(
+  storage: StorageLike,
+  text: string,
+): SessionRecord[] {
+  if (!text.trim())
+    throw new SessionDataError(
+      "Choose a JSON file containing a session array; the file is blank.",
+    );
   const imported = parseSessions(text);
   const existing = loadSessions(storage);
   const merged = [...existing, ...imported];

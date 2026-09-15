@@ -1,0 +1,82 @@
+name: Desktop reference (manual)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: desktop-reference-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: lint + tests (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: |
+            requirements.txt
+            requirements-dev.txt
+
+      # Tkinter ships with CPython but is a separate system package on Debian
+      # and Ubuntu. The tests never open a window; this is here so that
+      # importing mathdrill.app stays possible on the runner.
+      - name: Install Tkinter
+        run: sudo apt-get update && sudo apt-get install -y python3-tk
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Ruff lint
+        run: ruff check --output-format=github .
+
+      - name: Ruff format
+        run: ruff format --check .
+
+      - name: Tests
+        run: pytest -q
+
+      # Proves the documented setup path works from a clean environment --
+      # this is the step that would have caught the unusable "tkinter" line
+      # in requirements.txt.
+      - name: Clean install from requirements.txt
+        run: |
+          python -m venv /tmp/clean
+          /tmp/clean/bin/python -m pip install --upgrade pip
+          /tmp/clean/bin/python -m pip install -r requirements.txt
+          /tmp/clean/bin/python -c "import pandas, matplotlib, seaborn; print('clean install OK')"
+
+  audit:
+    name: pip-audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+
+      # Both files are audited. Auditing only requirements.txt was how a
+      # known CVE in the pinned pytest (PYSEC-2026-1845) sat unnoticed in
+      # requirements-dev.txt.
+      - name: Audit runtime dependencies
+        run: pip-audit --progress-spinner off -r requirements.txt
+
+      - name: Audit development dependencies
+        run: pip-audit --progress-spinner off -r requirements-dev.txt

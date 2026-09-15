@@ -100,8 +100,20 @@ describe("session normalization", () => {
   it.each([
     ["{}", "array"],
     ["not json", "valid JSON"],
-    [JSON.stringify([{ session_name: "x", duration: 60, insights: "bad" }]), "insights"],
-    [JSON.stringify([{ session_name: "x", duration: 60, insights: [answer({ operand_1: 1.5 })] }]), "safe whole number"],
+    [
+      JSON.stringify([{ session_name: "x", duration: 60, insights: "bad" }]),
+      "insights",
+    ],
+    [
+      JSON.stringify([
+        {
+          session_name: "x",
+          duration: 60,
+          insights: [answer({ operand_1: 1.5 })],
+        },
+      ]),
+      "safe whole number",
+    ],
   ])("rejects malformed data with a useful error", (value, message) => {
     expect(() => parseSessions(value)).toThrow(message);
   });
@@ -114,7 +126,10 @@ describe("storage persistence", () => {
     expect(storage.value).toContain('"session_name":"practice"');
     expect(storage.value).toContain('"operand_1":2');
     expect(storage.value).not.toContain("question_type");
-    expect(loadSessions(storage)[0]).toMatchObject({ sessionName: "practice", duration: 60 });
+    expect(loadSessions(storage)[0]).toMatchObject({
+      sessionName: "practice",
+      duration: 60,
+    });
   });
 
   it("appends without deduplicating equal names", () => {
@@ -122,7 +137,10 @@ describe("storage persistence", () => {
     saveSessions(storage, [session()]);
     const result = appendSession(storage, { ...session(), duration: 120 });
     expect(result).toHaveLength(2);
-    expect(result.map((item) => item.sessionName)).toEqual(["practice", "practice"]);
+    expect(result.map((item) => item.sessionName)).toEqual([
+      "practice",
+      "practice",
+    ]);
   });
 
   it("preserves the existing serialized value when writing fails", () => {
@@ -130,7 +148,9 @@ describe("storage persistence", () => {
     saveSessions(storage, [session()]);
     const original = storage.value;
     storage.failWrites = true;
-    expect(() => appendSession(storage, session("new"))).toThrow(SessionDataError);
+    expect(() => appendSession(storage, session("new"))).toThrow(
+      SessionDataError,
+    );
     expect(storage.value).toBe(original);
   });
 
@@ -141,12 +161,16 @@ describe("storage persistence", () => {
   });
 
   it("does not serialize the browser-only identity", () => {
-    expect(serializeSessions([{ ...session(), id: "private-id" }])).not.toContain("private-id");
+    expect(
+      serializeSessions([{ ...session(), id: "private-id" }]),
+    ).not.toContain("private-id");
   });
 
   it("validates every imported session before writing", () => {
     const storage = new FakeStorage();
-    const imported = JSON.stringify([{ session_name: "imported", duration: 30, insights: [] }]);
+    const imported = JSON.stringify([
+      { session_name: "imported", duration: 30, insights: [] },
+    ]);
     expect(importSessions(storage, imported)).toHaveLength(1);
     const before = storage.value;
     expect(() => importSessions(storage, "{invalid")).toThrow(SessionDataError);

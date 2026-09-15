@@ -61,7 +61,11 @@ function validateInteger(value: number, label: string): number {
   return value;
 }
 
-function validateRange(name: string, value: OperandRange | undefined, fallback: OperandRange): OperandRange {
+function validateRange(
+  name: string,
+  value: OperandRange | undefined,
+  fallback: OperandRange,
+): OperandRange {
   const range = value ?? fallback;
   if (!Array.isArray(range) || range.length !== 2) {
     throw new ConfigError(`${name} must be a [minimum, maximum] pair.`);
@@ -69,7 +73,9 @@ function validateRange(name: string, value: OperandRange | undefined, fallback: 
   const low = validateInteger(range[0], `${name} minimum`);
   const high = validateInteger(range[1], `${name} maximum`);
   if (low > high) {
-    throw new ConfigError(`${name} minimum (${low}) is greater than its maximum (${high}).`);
+    throw new ConfigError(
+      `${name} minimum (${low}) is greater than its maximum (${high}).`,
+    );
   }
   if (low < 0) {
     throw new ConfigError(`${name} cannot be negative (got ${low}).`);
@@ -78,7 +84,11 @@ function validateRange(name: string, value: OperandRange | undefined, fallback: 
 }
 
 export function cleanSessionName(raw: string): string {
-  return raw.replace(/[\u0000-\u001f\u007f]/g, "").trim().replace(/\s+/g, " ").slice(0, 120);
+  return raw
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .trim()
+    .replace(/\s+/g, " ")
+    .slice(0, 120);
 }
 
 export function createDrillConfig(input: DrillConfigInput): DrillConfig {
@@ -87,11 +97,18 @@ export function createDrillConfig(input: DrillConfigInput): DrillConfig {
     if (!OPERATIONS.includes(operation as Operation)) {
       throw new ConfigError(`Unknown operation: ${operation}.`);
     }
-    if (!operations.includes(operation as Operation)) operations.push(operation as Operation);
+    if (!operations.includes(operation as Operation))
+      operations.push(operation as Operation);
   }
-  if (operations.length === 0) throw new ConfigError("Select at least one operation.");
+  if (operations.length === 0)
+    throw new ConfigError("Select at least one operation.");
   if (!Number.isSafeInteger(input.duration) || input.duration <= 0) {
-    throw new ConfigError("Duration must be a positive safe whole number of seconds.");
+    throw new ConfigError(
+      "Duration must be a positive safe whole number of seconds.",
+    );
+  }
+  if (!Number.isSafeInteger(input.duration * 1000)) {
+    throw new ConfigError("Duration exceeds safe timer precision.");
   }
 
   const config: DrillConfig = {
@@ -107,11 +124,31 @@ export function createDrillConfig(input: DrillConfigInput): DrillConfig {
 
   if (config.operations.includes("div")) {
     if (config.mulRange2[1] < 1) {
-      throw new ConfigError("Division needs a divisor of at least 1; widen mulRange2.");
+      throw new ConfigError(
+        "Division needs a divisor of at least 1; widen mulRange2.",
+      );
     }
     if (config.mulRange1[1] < 1) {
-      throw new ConfigError("Division needs a quotient of at least 1; widen mulRange1.");
+      throw new ConfigError(
+        "Division needs a quotient of at least 1; widen mulRange1.",
+      );
     }
+  }
+  if (
+    config.operations.includes("add") &&
+    !Number.isSafeInteger(config.addRange1[1] + config.addRange2[1])
+  ) {
+    throw new ConfigError("Addition ranges exceed safe integer precision.");
+  }
+  if (
+    config.operations.some(
+      (operation) => operation === "mul" || operation === "div",
+    ) &&
+    !Number.isSafeInteger(config.mulRange1[1] * config.mulRange2[1])
+  ) {
+    throw new ConfigError(
+      "Multiplication/division ranges exceed safe integer precision.",
+    );
   }
   return config;
 }
@@ -122,49 +159,94 @@ class MathRandomSource implements RandomSource {
   }
 
   randint(low: number, high: number): number {
-    return Math.floor(Math.random() * (high - low + 1)) + low;
+    return Math.min(high, Math.floor(Math.random() * (high - low + 1)) + low);
   }
 }
 
 const defaultRandom = new MathRandomSource();
 
-function positiveRandomInt(random: RandomSource, low: number, high: number): number {
+function positiveRandomInt(
+  random: RandomSource,
+  low: number,
+  high: number,
+): number {
   return random.randint(high < 1 ? low : Math.max(low, 1), high);
 }
 
-export function generateQuestion(config: DrillConfig, random: RandomSource = defaultRandom): Question {
+export function generateQuestion(
+  config: DrillConfig,
+  random: RandomSource = defaultRandom,
+): Question {
   const operation = random.choice(config.operations);
 
   if (operation === "add") {
     let operand1 = random.randint(config.addRange1[0], config.addRange1[1]);
     let operand2 = random.randint(config.addRange2[0], config.addRange2[1]);
-    if (random.choice([true, false])) [operand1, operand2] = [operand2, operand1];
-    return { text: `${operand1} + ${operand2}`, answer: operand1 + operand2, operation, operand1, operand2 };
+    if (random.choice([true, false]))
+      [operand1, operand2] = [operand2, operand1];
+    return {
+      text: `${operand1} + ${operand2}`,
+      answer: operand1 + operand2,
+      operation,
+      operand1,
+      operand2,
+    };
   }
 
   if (operation === "sub") {
     let operand1 = random.randint(config.addRange1[0], config.addRange1[1]);
     let operand2 = random.randint(config.addRange2[0], config.addRange2[1]);
-    if (random.choice([true, false])) [operand1, operand2] = [operand2, operand1];
-    if (!config.allowNegativeAnswers && operand2 > operand1) [operand1, operand2] = [operand2, operand1];
-    return { text: `${operand1} - ${operand2}`, answer: operand1 - operand2, operation, operand1, operand2 };
+    if (random.choice([true, false]))
+      [operand1, operand2] = [operand2, operand1];
+    if (!config.allowNegativeAnswers && operand2 > operand1)
+      [operand1, operand2] = [operand2, operand1];
+    return {
+      text: `${operand1} - ${operand2}`,
+      answer: operand1 - operand2,
+      operation,
+      operand1,
+      operand2,
+    };
   }
 
   if (operation === "div") {
-    const operand2 = positiveRandomInt(random, config.mulRange2[0], config.mulRange2[1]);
-    const quotient = positiveRandomInt(random, config.mulRange1[0], config.mulRange1[1]);
+    const operand2 = positiveRandomInt(
+      random,
+      config.mulRange2[0],
+      config.mulRange2[1],
+    );
+    const quotient = positiveRandomInt(
+      random,
+      config.mulRange1[0],
+      config.mulRange1[1],
+    );
     const operand1 = operand2 * quotient;
-    if (!Number.isSafeInteger(operand1)) throw new ConfigError("Division operands exceed safe integer precision.");
-    return { text: `${operand1} ÷ ${operand2}`, answer: quotient, operation, operand1, operand2 };
+    if (!Number.isSafeInteger(operand1))
+      throw new ConfigError("Division operands exceed safe integer precision.");
+    return {
+      text: `${operand1} ÷ ${operand2}`,
+      answer: quotient,
+      operation,
+      operand1,
+      operand2,
+    };
   }
 
   let operand1 = random.randint(config.mulRange1[0], config.mulRange1[1]);
   let operand2 = random.randint(config.mulRange2[0], config.mulRange2[1]);
   if (random.choice([true, false])) [operand1, operand2] = [operand2, operand1];
   if (!Number.isSafeInteger(operand1 * operand2)) {
-    throw new ConfigError("Multiplication operands exceed safe integer precision.");
+    throw new ConfigError(
+      "Multiplication operands exceed safe integer precision.",
+    );
   }
-  return { text: `${operand1} × ${operand2}`, answer: operand1 * operand2, operation, operand1, operand2 };
+  return {
+    text: `${operand1} × ${operand2}`,
+    answer: operand1 * operand2,
+    operation,
+    operand1,
+    operand2,
+  };
 }
 
 export { MAX_SAFE_INTEGER };

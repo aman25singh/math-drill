@@ -3,18 +3,31 @@
   "private": true,
   "version": "0.1.0",
   "type": "module",
+  "engines": {
+    "node": ">=24.21.0 <25"
+  },
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "check": "astro check",
-    "test": "vitest run"
+    "dev": "node scripts/astro.mjs dev",
+    "build": "node scripts/check-runtime.mjs && node scripts/astro.mjs build",
+    "preview": "node scripts/astro.mjs preview",
+    "check": "node scripts/astro.mjs check",
+    "test": "vitest run",
+    "lint": "eslint . && prettier --check .",
+    "format": "prettier --write .",
+    "verify": "node scripts/check-runtime.mjs && eslint . && prettier --check . && vitest run && node scripts/astro.mjs check && node scripts/astro.mjs build",
+    "test:e2e": "playwright test"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.4",
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^26.5.1",
     "astro": "^7.3.2",
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
+    "prettier-plugin-astro": "^1.0.0",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^4.1.11"
   }
 }
