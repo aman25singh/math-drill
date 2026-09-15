@@ -171,7 +171,11 @@ def digit_difficulty(df: pd.DataFrame, min_samples: int = 1) -> pd.DataFrame:
         )
     if not rows:
         raise NoDataError("Not enough data to compare digits yet.")
-    return pd.DataFrame(rows).set_index("digit").sort_values("avg_time", ascending=False)
+    return (
+        pd.DataFrame(rows)
+        .set_index("digit")
+        .sort_values("avg_time", ascending=False, kind="stable", key=lambda s: s.round(10))
+    )
 
 
 def _numeric_bins(series: pd.Series, max_bins: int = 4) -> pd.Series | None:
@@ -274,7 +278,9 @@ def feature_comparison(df: pd.DataFrame, min_samples: int = 5) -> pd.DataFrame:
         lambda r: r["label"] if r["group"] == "true" else f"{r['label']} {r['group']}",
         axis=1,
     )
-    return result.sort_values("delta", ascending=False).reset_index(drop=True)
+    return result.sort_values(
+        "delta", ascending=False, kind="stable", key=lambda s: s.round(10)
+    ).reset_index(drop=True)
 
 
 def accuracy_by_time_bucket(df: pd.DataFrame) -> pd.Series:
@@ -338,7 +344,7 @@ def response_time_series(df: pd.DataFrame, window: int = 5) -> pd.DataFrame:
     """Answer times in order, with a rolling average."""
     if df is None or df.empty:
         raise NoDataError("No session data found. Play a session first.")
-    ordered = df.sort_values("timestamp").reset_index(drop=True)
+    ordered = df.sort_values("timestamp", kind="stable").reset_index(drop=True)
     ordered["question_number"] = ordered.index + 1
     ordered["rolling"] = ordered["time_taken_sec"].rolling(window, min_periods=1).mean()
     return ordered

@@ -71,6 +71,21 @@ summary functions. Install the root Python development environment first. On
 Windows it defaults to `../.venv/Scripts/python.exe`; elsewhere it uses `python3`.
 Set `MATHDRILL_PYTHON` to override the interpreter. Tests never read practice logs.
 
+## Metric parity
+
+W04 metrics are compared with the installed Python implementation on shared
+synthetic cases during `npm test` (absolute numerical tolerance 1e-10).
+Feature comparisons use true versus false groups for booleans (five samples on
+both sides by default), and quantile bins with an equal-width fallback for numeric
+features. Numeric bins compare with the overall mean. Time buckets preserve the
+desktop's right-closed boundaries: 2, 4 and 6 seconds belong to the preceding bin,
+despite the historical `<2s` label. Zero-duration sessions contribute answers but
+are excluded from average session speed; no usable durations yields NaN.
+Both implementations now preserve input order for tied timestamps and metric
+values, making rolling averages and sorted comparisons deterministic. Metric sort
+keys are rounded to 10 decimal places in both languages to ignore insignificant
+floating-point differences; reported metric values retain their full precision.
+
 ## Planned structure
 
 ```text
