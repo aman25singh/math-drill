@@ -42,6 +42,18 @@ npm run preview   # preview the production build
 - First-time users see an honest empty state until there is enough data for a
   comparison; the exact thresholds must match the ported Python metrics.
 
+## W02 timed drill
+
+The first browser workflow is complete: configure a session, answer generated
+questions against a monotonic deadline, and review the score when time expires.
+`src/lib/drill.ts` keeps timing and question consumption deterministic through
+injected clocks, starts response timing only after the UI arms a rendered question,
+and saves a finished session at most once through the W03 storage adapter. Blank
+answers are ignored, invalid non-empty answers are recorded as incorrect, and a
+submission at or after the deadline is rejected. Navigating away or closing the
+tab abandons an active drill; hidden tabs continue against the same deadline and
+the visible timer catches up when the tab returns.
+
 ## Planned structure
 
 ```text
