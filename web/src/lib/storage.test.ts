@@ -3,6 +3,7 @@ import {
   STORAGE_KEY,
   SessionDataError,
   appendSession,
+  importSessions,
   loadSessions,
   normalizeSessions,
   parseSessions,
@@ -141,5 +142,14 @@ describe("storage persistence", () => {
 
   it("does not serialize the browser-only identity", () => {
     expect(serializeSessions([{ ...session(), id: "private-id" }])).not.toContain("private-id");
+  });
+
+  it("validates every imported session before writing", () => {
+    const storage = new FakeStorage();
+    const imported = JSON.stringify([{ session_name: "imported", duration: 30, insights: [] }]);
+    expect(importSessions(storage, imported)).toHaveLength(1);
+    const before = storage.value;
+    expect(() => importSessions(storage, "{invalid")).toThrow(SessionDataError);
+    expect(storage.value).toBe(before);
   });
 });

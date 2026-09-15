@@ -204,3 +204,16 @@ export function loadBrowserSessions(): SessionRecord[] {
 export function appendBrowserSession(session: SessionRecord): SessionRecord[] {
   return appendSession(browserStorage(), session);
 }
+
+/** Validate an exported desktop session file completely before changing history. */
+export function importSessions(storage: StorageLike, text: string): SessionRecord[] {
+  const imported = parseSessions(text);
+  const existing = loadSessions(storage);
+  const merged = [...existing, ...imported];
+  saveSessions(storage, merged);
+  return merged;
+}
+
+export function importBrowserSessions(text: string): SessionRecord[] {
+  return importSessions(browserStorage(), text);
+}
