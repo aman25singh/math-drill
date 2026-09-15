@@ -207,6 +207,7 @@ export function appendBrowserSession(session: SessionRecord): SessionRecord[] {
 
 /** Validate an exported desktop session file completely before changing history. */
 export function importSessions(storage: StorageLike, text: string): SessionRecord[] {
+  if (!text.trim()) throw new SessionDataError("Choose a JSON file containing a session array; the file is blank.");
   const imported = parseSessions(text);
   const existing = loadSessions(storage);
   const merged = [...existing, ...imported];

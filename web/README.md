@@ -54,6 +54,23 @@ submission at or after the deadline is rejected. Navigating away or closing the
 tab abandons an active drill; hidden tabs continue against the same deadline and
 the visible timer catches up when the tab returns.
 
+## Import and export
+
+Use the JSON picker to append desktop history. Every import appends all sessions,
+including empty sessions and repeated names; importing the same file twice adds
+duplicates. Export all history first for a backup. Export downloads the canonical
+desktop array as `session_insights.json`; it includes no browser session IDs.
+Legacy `question_type` is accepted and exported as `operation`.
+
+History belongs to this browser and origin. Clearing browser data removes it;
+there is no cloud backup. Avoid simultaneous edits from multiple tabs because
+localStorage read/append/write is not a cross-tab transaction.
+
+`npm test` includes a synthetic export checked by the real Python loader and
+summary functions. Install the root Python development environment first. On
+Windows it defaults to `../.venv/Scripts/python.exe`; elsewhere it uses `python3`.
+Set `MATHDRILL_PYTHON` to override the interpreter. Tests never read practice logs.
+
 ## Planned structure
 
 ```text
