@@ -10,6 +10,7 @@ Run these commands from `web/`:
 npm install
 npm run dev       # local development server
 npm run check     # Astro/TypeScript diagnostics
+npm test          # deterministic pure-logic tests
 npm run build     # static production build in dist/
 npm run preview   # preview the production build
 ```
